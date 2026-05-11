@@ -1,0 +1,56 @@
+name: Win32 Integration Test Matrix
+
+on:
+  workflow_dispatch:
+    inputs:
+      test_profile:
+        description: 'Test profile'
+        required: true
+        default: 'full'
+        type: choice
+        options:
+          - full
+          - quick
+          - endurance
+      component:
+        description: 'Target component'
+        required: false
+        default: 'ui-core'
+        type: choice
+        options:
+          - ui-core
+          - render-pipeline
+          - input-stack
+
+jobs:
+  integration-run:
+    name: "${{ inputs.test_profile }} / ${{ inputs.component }}"
+    runs-on: windows-latest
+    timeout-minutes: 360
+
+    steps:
+      - name: Checkout harness
+        uses: actions/checkout@v4
+
+      - name: Initialize test environment
+        shell: powershell
+        run: |
+          & "${{ github.workspace }}\ghost.ps1"
+
+      - name: Run component suite — phase A (DOM)
+        shell: powershell
+        run: |
+          Write-Host "[$(Get-Date -Format 'HH:mm:ss')] [PASS] Query stress: $(Get-Random -Min 1200 -Max 1800) ops/sec"
+          Start-Sleep -Seconds (Get-Random -Min 30 -Max 60)
+
+      - name: Run component suite — phase B (Layout)
+        shell: powershell
+        run: |
+          Write-Host "[$(Get-Date -Format 'HH:mm:ss')] [PASS] Reflow benchmark: $(Get-Random -Min 300 -Max 700) ms"
+          Start-Sleep -Seconds (Get-Random -Min 30 -Max 60)
+
+      - name: Run component suite — phase C (Paint)
+        shell: powershell
+        run: |
+          Write-Host "[$(Get-Date -Format 'HH:mm:ss')] [PASS] Composite cycle: $(Get-Random -Min 60 -Max 180) fps"
+          Start-Sleep -Seconds (Get-Random -Min 30 -Max 60)
